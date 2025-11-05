@@ -28,12 +28,50 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle)
     return model;
 }
 
-Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar)
+Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
+                                      float zNear, float zFar)
 {
-    // TODO: Copy-paste your implementation from the previous assignment.
-    Eigen::Matrix4f projection;
+    // Students will implement this function
 
-    return projection;
+    Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
+
+    // TODO: Implement this function
+    // Create the projection matrix for the given parameters.
+    // Then return it.
+
+    float t = zNear * tan(eye_fov * MY_PI / 180 / 2.0);
+    float r = t * aspect_ratio;
+    float l = -r;
+    float b = -t;
+    float n = zNear;
+    float f = zFar;
+
+    Eigen::Matrix4f p2o;
+    p2o << n, 0,   0,    0,
+           0, n,   0,    0,
+           0, 0, n+f, -n*f,
+           0, 0,   1,    0;
+
+    Eigen::Matrix4f scale;
+    scale << 2/(r-l),       0,       0, 0,
+                   0, 2/(t-b),       0, 0,
+                   0,       0, 2/(f-n), 0,
+                   0,       0,       0, 1;
+
+    Eigen::Matrix4f move;
+    move << 1, 0, 0, -(r+l)/2,
+            0, 1, 0, -(t+b)/2,
+            0, 0, 1, -(n+f)/2,
+            0, 0, 0,        1;
+
+    Eigen::Matrix4f z_flip;
+    z_flip << 1, 0, 0, 0,
+               0, 1, 0, 0,
+               0, 0,-1, 0,
+               0 ,0, 0, 1;
+    
+    return scale * move * p2o * z_flip * projection;
+
 }
 
 int main(int argc, const char** argv)

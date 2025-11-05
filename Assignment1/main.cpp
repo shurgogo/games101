@@ -54,8 +54,8 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
     float r = t * aspect_ratio;
     float l = -r;
     float b = -t;
-    float n = -zNear;
-    float f = -zFar;
+    float n = zNear;
+    float f = zFar;
 
     Eigen::Matrix4f p2o;
     p2o << n, 0,   0,    0,
@@ -66,7 +66,7 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
     Eigen::Matrix4f scale;
     scale << 2/(r-l),       0,       0, 0,
                    0, 2/(t-b),       0, 0,
-                   0,       0, 2/(n-f), 0,
+                   0,       0, 2/(f-n), 0,
                    0,       0,       0, 1;
 
     Eigen::Matrix4f move;
@@ -74,11 +74,35 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
             0, 1, 0, -(t+b)/2,
             0, 0, 1, -(n+f)/2,
             0, 0, 0,        1;
+
+    Eigen::Matrix4f z_flip;
+    z_flip << 1, 0, 0, 0,
+               0, 1, 0, 0,
+               0, 0,-1, 0,
+               0 ,0, 0, 1;
     
-    return scale * move * p2o * projection;
+    return scale * move * p2o * z_flip * projection;
 
 }
 
+
+Eigen::Matrix4f get_rotation(Vector3f axis, float angle)
+{
+    float alpha = angle * 180 / MY_PI;
+    Eigen::Matrix4f result = Eigen::Matrix4f::Identity();
+    Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
+    Eigen::Matrix3f N;
+    N <<        0, -axis[2],  axis[1],
+          axis[2],        0, -axis[0],
+         -axis[1],  axis[0],        0;
+    Eigen::Matrix3f rotate;
+    rotate = cos(alpha) * I + (1 - cos(alpha)) * axis * axis.transpose() + sin(alpha) * N;
+    result << rotate(0, 0), rotate(0, 1), rotate(0, 2), 0,
+              rotate(1, 0), rotate(1, 1), rotate(1, 2), 0,
+              rotate(2, 0), rotate(2, 1), rotate(2, 2), 0,
+                         0,            0,            0, 1;
+    return result;
+}
 int main(int argc, const char** argv)
 {
     float angle = 0;
